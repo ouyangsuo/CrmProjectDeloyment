@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.wolfcode.crm.mapper.SystemDictionaryMapper">
+  <resultMap id="BaseResultMap" type="cn.wolfcode.crm.domain.SystemDictionary">
+    <id column="id" property="id" />
+    <result column="sn" property="sn" />
+    <result column="title" property="title" />
+    <result column="intro" property="intro" />
+  </resultMap>
+
+  <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+    insert into systemdictionary (sn, title, intro)
+    values (#{sn}, #{title}, #{intro})
+  </insert>
+  <update id="updateByPrimaryKey">
+    update systemdictionary
+    set sn = #{sn},
+      title = #{title},
+      intro = #{intro}
+    where id = #{id}
+  </update>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap">
+    select id, sn, title, intro
+    from systemdictionary
+    where id = #{id}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap">
+    select id, sn, title, intro
+    from systemdictionary
+  </select>
+
+  <select id="selectForList" resultMap="BaseResultMap">
+    select id, sn, title, intro
+    from systemdictionary
+  </select>
+
+    <select id="selectItemsBySn" resultType="SystemDictionaryItem">
+      select item.id, item.title from systemDictionaryItem item  JOIN
+        systemDictionary d on d.id = item.parent_id where d.sn = #{sn}
+    </select>
+
+</mapper>

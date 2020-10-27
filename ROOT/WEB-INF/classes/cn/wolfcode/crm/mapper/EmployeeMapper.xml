@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.wolfcode.crm.mapper.EmployeeMapper">
+  <resultMap id="BaseResultMap" type="cn.wolfcode.crm.domain.Employee">
+    <id column="id" property="id" />
+    <result column="name" property="name" />
+    <result column="password" property="password" />
+    <result column="email" property="email" />
+    <result column="age" property="age" />
+    <result column="admin" property="admin" />
+
+    <!--部门与员工一对多关系-->
+    <association property="dept" javaType="Department" columnPrefix="d_">
+      <id column="id" property="id" />
+      <result column="name" property="name" />
+      <result column="sn" property="sn" />
+    </association>
+
+    <!--角色与员工多对多关系-->
+    <collection property="roles" column="id"
+                select="cn.wolfcode.crm.mapper.RoleMapper.getRoleByEmployeeId"/>
+
+  </resultMap>
+  <delete id="deleteByPrimaryKey">
+    delete from employee
+    where id = #{id}
+  </delete>
+  <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+    insert into employee (name, password, email, age, admin, dept_id)
+    values (#{name}, #{password}, #{email}, #{age}, #{admin}, #{dept.id})
+  </insert>
+  <update id="updateByPrimaryKey">
+    update employee
+    set name = #{name},
+      email = #{email},
+      age = #{age},
+      admin = #{admin},
+      dept_id = #{dept.id}
+    where id = #{id}
+  </update>
+
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap">
+    select
+		e.id, e.name, e.password, e.email, e.age, e.admin,
+		d.id d_id, d.name d_name
+    from employee e LEFT JOIN department d on e.dept_id = d.id
+    where e.id = #{id}
+  </select>
+
+  <select id="selectAll" resultMap="BaseResultMap">
+     select
+		e.id, e.name, e.password, e.email, e.age, e.admin,
+		d.id d_id, d.name d_name
+     from employee e LEFT JOIN department d on e.dept_id = d.id
+  </select>
+
+  <!--where 条件-->
+  <sql id="base_where">
+
+    <where>
+      <if test="keyword != null">
+        and (e.name like concat("%",#{keyword} ,"%") or e.email like concat("%",#{keyword} ,"%"))
+      </if>
+
+      <if test="deptId > 0">
+        and e.dept_id = #{deptId}
+      </if>
+    </where>
+
+  </sql>
+
+
+  <!--查数据-->
+  <select id="selectForList" resultMap="BaseResultMap">
+     select
+		e.id, e.name, e.password, e.email, e.age, e.admin,
+		d.id d_id, d.name d_name, d.sn d_sn
+     from employee e LEFT JOIN department d on e.dept_id = d.id
+
+    <include refid="base_where"/>
+
+  </select>
+
+
+  <!--维护与角色关系-->
+  <insert id="insertRelation">
+    insert into employee_role(employee_id, role_id) values(#{empId}, #{roleId})
+  </insert>
+
+  <!--删除与角色关系-->
+  <delete id="deleteRelation">
+
+    delete from employee_role where employee_id = #{id}
+
+  </delete>
+
+
+
+  <!--批量删除-->
+  <delete id="deleteBatch">
+    delete from employee where id in
+    <foreach collection="array" open="(" item="ele" separator="," close=")">
+      #{ele}
+    </foreach>
+  </delete>
+
+
+  <!--通过名字查询员工对象-->
+  <select id="selectEmpployeeByName" resultType="Employee">
+    select id, name, email, age, password, admin from employee where name = #{name}
+  </select>
+
+  <!--查询市场人员-->
+  <select id="selectMarketEmployee" resultType="Employee">
+    select e.id, e.name  from employee e
+    JOIN  employee_role er on e.id = er.employee_id
+    JOIN role r on r.id = er.role_id
+    where r.sn = "Market" or r.sn = "Market_Manager"
+  </select>
+
+
+</mapper>
+
+
